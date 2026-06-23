@@ -42,7 +42,7 @@
 
 `ash
 # 克隆仓库
-git clone https://github.com/YOUR_USERNAME/DuckSheep.git
+git clone https://github.com/kingroad5299/DuckSheep.git
 cd DuckSheep
 
 # 直接用浏览器打开 index.html 即可开发

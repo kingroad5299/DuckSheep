@@ -32,13 +32,13 @@
 
 `ash
 # 克隆仓库
-git clone https://github.com/YOUR_USERNAME/DuckSheep.git
+git clone https://github.com/kingroad5299/DuckSheep.git
 
 # 直接用浏览器打开
 open DuckSheep/index.html
 `
 
-或者直接访问 **[在线 Demo](https://YOUR_USERNAME.github.io/DuckSheep)** 🚀
+或者直接访问 **[在线 Demo](https://kingroad5299.github.io/DuckSheep)** 🚀
 
 ## 🎮 玩法
 
