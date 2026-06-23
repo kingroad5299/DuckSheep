@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuckSheep - 虚拟宠物养成</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦆</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦆 DuckSheep 🐑</h1>
+            <p class="subtitle">你的虚拟宠物伙伴</p>
+        </header>
+
+        <main>
+            <!-- 宠物展示区 -->
+            <div class="pet-stage" id="pet-stage">
+                <div class="pet-aura" id="pet-aura"></div>
+                <div class="pet-character" id="pet-character">
+                    <span class="pet-emoji" id="pet-emoji">🥚</span>
+                </div>
+                <div class="pet-name" id="pet-name">DuckSheep</div>
+                <div class="pet-mood" id="pet-mood">😊 开心</div>
+                <div class="pet-speech" id="pet-speech"></div>
+            </div>
+
+            <!-- 状态栏 -->
+            <div class="stats-panel">
+                <div class="stat">
+                    <span class="stat-icon">🍞</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill hunger" id="stat-hunger"></div>
+                    </div>
+                    <span class="stat-value" id="val-hunger">100%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">😊</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill happy" id="stat-happy"></div>
+                    </div>
+                    <span class="stat-value" id="val-happy">100%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">⚡</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill energy" id="stat-energy"></div>
+                    </div>
+                    <span class="stat-value" id="val-energy">100%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-icon">✨</span>
+                    <div class="stat-bar">
+                        <div class="stat-fill clean" id="stat-clean"></div>
+                    </div>
+                    <span class="stat-value" id="val-clean">100%</span>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="actions">
+                <button class="action-btn" data-action="feed">
+                    <span class="btn-icon">🍞</span>
+                    <span class="btn-label">喂食</span>
+                </button>
+                <button class="action-btn" data-action="play">
+                    <span class="btn-icon">⚽</span>
+                    <span class="btn-label">玩耍</span>
+                </button>
+                <button class="action-btn" data-action="clean">
+                    <span class="btn-icon">🛁</span>
+                    <span class="btn-label">清洁</span>
+                </button>
+                <button class="action-btn" data-action="sleep">
+                    <span class="btn-icon">😴</span>
+                    <span class="btn-label">睡觉</span>
+                </button>
+            </div>
+
+            <!-- 成就 -->
+            <div class="achievements" id="achievements">
+                <h3>🏆 成就</h3>
+                <div class="achievement-list" id="achievement-list"></div>
+            </div>
+
+            <!-- 信息面板 -->
+            <div class="info-panel">
+                <span class="stage-badge" id="stage-badge">🥚 孵化中</span>
+                <span class="age-badge" id="age-badge">年龄: 0 分钟</span>
+                <span class="total-badge" id="total-badge">互动: 0 次</span>
+            </div>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ | DuckSheep &copy; 2026</p>
+        </footer>
+    </div>
+
+    <!-- 粒子容器 -->
+    <div class="particles" id="particles"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

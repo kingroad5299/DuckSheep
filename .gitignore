@@ -1,0 +1,25 @@
+﻿# Dependencies
+node_modules/
+bower_components/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Build
+dist/
+build/
+*.log
+
+# Env
+.env
+.env.local
+.env.*.local
