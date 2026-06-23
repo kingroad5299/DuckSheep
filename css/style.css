@@ -512,3 +512,96 @@ body.night-mode .pet-speech {
     background: #2a2a4a;
     color: #ccc;
 }
+
+/* ===== Share Section ===== */
+.share-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.share-title {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.share-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.share-btn.twitter {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.share-btn.twitter:hover {
+    background: #333;
+    transform: translateY(-1px);
+}
+
+.share-btn.weibo {
+    background: #e6162d;
+    color: #fff;
+}
+
+.share-btn.weibo:hover {
+    background: #ff2d44;
+    transform: translateY(-1px);
+}
+
+.share-btn.copy {
+    background: #f0f0f0;
+    color: #555;
+    font-family: inherit;
+}
+
+.share-btn.copy:hover {
+    background: #e0e0e0;
+    transform: translateY(-1px);
+}
+
+.copyright {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.copyright a {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.copyright a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Night mode share ===== */
+body.night-mode .share-section {
+    border-top-color: rgba(255,255,255,0.06);
+}
+
+body.night-mode .share-btn.copy {
+    background: rgba(255,255,255,0.1);
+    color: #aaa;
+}
+
+body.night-mode .share-btn.copy:hover {
+    background: rgba(255,255,255,0.15);
+}

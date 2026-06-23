@@ -2,16 +2,29 @@
 
 # 🦆🐑 DuckSheep
 
-### 你的虚拟宠物伙伴 · 在浏览器中养一只可爱的鸭羊兽！
+### 你的虚拟宠物伙伴 · 在浏览器里养一只可爱的鸭羊兽！
 
 [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg)](CONTRIBUTING.md)
 [![Made with Love](https://img.shields.io/badge/made%20with-%E2%9D%A4%EF%B8%8F-red.svg)](https://github.com)
+[![GitHub stars](https://img.shields.io/github/stars/kingroad5299/DuckSheep?style=social)](https://github.com/kingroad5299/DuckSheep)
 
 > 一只融合了鸭子和绵羊的虚拟宠物，在浏览器里陪伴你每一天。
 > 喂食、玩耍、清洁、哄睡 — 看着它从一颗蛋成长为完全体！
 
 </div>
+
+---
+
+## 📸 Demo
+
+> 🎬 录一段 15 秒操作 GIF 替换这里，展示喂食→玩耍→进化→成就的完整流程
+
+| 桌面端 | 移动端 |
+|--------|--------|
+| ![desktop](https://via.placeholder.com/400x250/c8e6c9/333?text=Desktop+Screenshot) | ![mobile](https://via.placeholder.com/200x350/c8e6c9/333?text=Mobile) |
+
+🎮 **[在线体验 →](https://kingroad5299.github.io/DuckSheep)**
 
 ---
 
@@ -27,6 +40,16 @@
 - 🌙 **夜间模式** — 宠物睡觉时自动切换暗色主题
 - 📱 **响应式设计** — 手机、平板、桌面全适配
 - ⚡ **纯前端** — 零依赖，双击 HTML 就能跑
+
+## 📈 Star History
+
+<a href="https://star-history.com/#kingroad5299/DuckSheep&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=kingroad5299/DuckSheep&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=kingroad5299/DuckSheep&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=kingroad5299/DuckSheep&type=Date" />
+  </picture>
+</a>
 
 ## 🎬 快速开始
 
