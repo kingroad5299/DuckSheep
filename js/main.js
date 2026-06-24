@@ -1,136 +1,54 @@
 ﻿/* ============================================
-   DuckSheep - Virtual Pet Game Engine
+   DuckSheep v2.0 - Core Engine
+   Virtual Pet with Canvas, MiniGame, Shop
    ============================================ */
 
-// ===== DOM Elements =====
-const petEmoji = document.getElementById('pet-emoji');
-const petCharacter = document.getElementById('pet-character');
-const petMood = document.getElementById('pet-mood');
-const petSpeech = document.getElementById('pet-speech');
-const petAura = document.getElementById('pet-aura');
-const statHunger = document.getElementById('stat-hunger');
-const statHappy = document.getElementById('stat-happy');
-const statEnergy = document.getElementById('stat-energy');
-const statClean = document.getElementById('stat-clean');
-const valHunger = document.getElementById('val-hunger');
-const valHappy = document.getElementById('val-happy');
-const valEnergy = document.getElementById('val-energy');
-const valClean = document.getElementById('val-clean');
-const stageBadge = document.getElementById('stage-badge');
-const ageBadge = document.getElementById('age-badge');
-const totalBadge = document.getElementById('total-badge');
-const particlesContainer = document.getElementById('particles');
-const achievementList = document.getElementById('achievement-list');
-
-// ===== Sound Engine (Web Audio API) =====
-let audioCtx = null;
-
-function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-}
-
-function playTone(freq, type, duration, vol = 0.1) {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-}
-
-function sfxFeed() { playTone(523, 'sine', 0.15); setTimeout(() => playTone(659, 'sine', 0.15), 100); }
-function sfxPlay() { playTone(440, 'square', 0.1); setTimeout(() => playTone(554, 'square', 0.1), 80); setTimeout(() => playTone(659, 'square', 0.1), 160); }
-function sfxClean() { playTone(880, 'sine', 0.3, 0.05); }
-function sfxSleep() { playTone(220, 'triangle', 0.5, 0.08); setTimeout(() => playTone(196, 'triangle', 0.5, 0.08), 300); }
-function sfxEvolve() { playTone(523, 'sine', 0.2); setTimeout(() => playTone(659, 'sine', 0.2), 150); setTimeout(() => playTone(784, 'sine', 0.3), 300); }
-function sfxAchievement() { playTone(784, 'sine', 0.15); setTimeout(() => playTone(988, 'sine', 0.15), 100); setTimeout(() => playTone(1175, 'sine', 0.25), 200); }
-
-// ===== Pet State =====
-const EVOLUTION_STAGES = {
-    egg:    { emoji: '🥚', name: '孵化中', minAge: 0,    mood: '🤔 等待孵化...' },
-    baby:   { emoji: '🐣', name: '宝宝期', minAge: 3,    mood: '👶 我是宝宝！' },
-    growing:{ emoji: '🐥', name: '成长期', minAge: 15,   mood: '🌱 正在长大！' },
-    adult:  { emoji: '🦆', name: '成熟期', minAge: 40,   mood: '😎 我长大了！' },
-    master: { emoji: '🦚', name: '完全体', minAge: 120,  mood: '👑 我是王者！' },
-};
-
-const ACHIEVEMENTS = [
-    { id: 'first_feed',    icon: '🍞', name: '初次喂食',    desc: '第一次喂食 DuckSheep', condition: (s) => s.totalActions >= 1 },
-    { id: 'first_play',    icon: '⚽', name: '初次玩耍',    desc: '第一次和 DuckSheep 玩耍', condition: (s) => s.totalActions >= 2 },
-    { id: 'clean_pet',     icon: '✨', name: '爱干净',      desc: '给 DuckSheep 清洁一次', condition: (s) => s.totalActions >= 3 },
-    { id: 'good_sleep',    icon: '💤', name: '好梦',        desc: '让 DuckSheep 睡一觉', condition: (s) => s.totalActions >= 4 },
-    { id: 'ten_actions',   icon: '🔟', name: '10次互动',    desc: '完成 10 次互动', condition: (s) => s.totalActions >= 10 },
-    { id: 'baby_grown',    icon: '🐣', name: '孵化成功',    desc: 'DuckSheep 成功孵化', condition: (s) => s.age >= 3 },
-    { id: 'adult_reach',   icon: '🦆', name: '长大成人',    desc: 'DuckSheep 进入成熟期', condition: (s) => s.age >= 40 },
-    { id: 'master_reach',  icon: '🦚', name: '完全体',      desc: 'DuckSheep 达到完全体', condition: (s) => s.age >= 120 },
-    { id: 'fifty_actions', icon: '💯', name: '50次互动',    desc: '完成 50 次互动', condition: (s) => s.totalActions >= 50 },
-    { id: 'perfect_stats', icon: '🌟', name: '满分状态',    desc: '所有属性达到 90% 以上', condition: (s) => s.hunger >= 90 && s.happy >= 90 && s.energy >= 90 && s.clean >= 90 },
-    { id: 'full_day',      icon: '📅', name: '一天陪伴',    desc: '累计陪伴 24 小时', condition: (s) => s.age >= 1440 },
-    { id: 'quick_react',   icon: '⚡', name: '快速反应',    desc: '1 分钟内完成 5 次互动', condition: (s) => s.totalActions >= 5 },
-];
-
+// ===== State =====
 const defaultState = {
+    petName: 'DuckSheep',
     hunger: 100,
     happy: 100,
     energy: 100,
     clean: 100,
-    age: 0,           // minutes
+    age: 0,
     totalActions: 0,
+    coins: 100,
     lastTick: Date.now(),
     isSleeping: false,
     sleepStart: null,
     achievements: [],
-    unlockedAchievements: [],
+    inventory: [],
+    equippedAccessory: null,
+    currentView: 'home',
 };
 
 let state = { ...defaultState };
 let speechTimeout = null;
 let tickInterval = null;
-let actionCooldowns = {};
+let petAnimState = 'idle';
+let animStateTimer = 0;
 
-// ===== Persistence =====
-function saveState() {
-    state.lastTick = Date.now();
-    localStorage.setItem('ducksheep_state', JSON.stringify(state));
-}
-
-function loadState() {
-    const saved = localStorage.getItem('ducksheep_state');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            state = { ...defaultState, ...parsed };
-            const elapsed = (Date.now() - state.lastTick) / 1000 / 60; // minutes
-            if (elapsed > 0 && !state.isSleeping) {
-                applyTimeDecay(elapsed);
-            }
-            if (state.isSleeping) {
-                const sleepElapsed = (Date.now() - state.sleepStart) / 1000 / 60;
-                state.energy = Math.min(100, state.energy + sleepElapsed * 3);
-                state.age += sleepElapsed;
-            }
-        } catch (e) {
-            state = { ...defaultState };
-        }
-    }
-}
-
-function applyTimeDecay(minutes) {
-    state.hunger = Math.max(0, state.hunger - minutes * 0.8);
-    state.happy = Math.max(0, state.happy - minutes * 0.5);
-    state.energy = Math.max(0, state.energy - minutes * 0.3);
-    state.clean = Math.max(0, state.clean - minutes * 0.4);
-    state.age += minutes;
-}
+// ===== Shop Items =====
+const SHOP_ITEMS = [
+    { id: 'bread', name: '面包', icon: '🍞', price: 20, type: 'food', desc: '恢复30饱腹度', effect: { hunger: 30 } },
+    { id: 'cake', name: '蛋糕', icon: '🍰', price: 50, type: 'food', desc: '恢复50饱腹度+10快乐', effect: { hunger: 50, happy: 10 } },
+    { id: 'ball', name: '皮球', icon: '⚽', price: 30, type: 'toy', desc: '玩耍时额外+10快乐', effect: { happy: 10 } },
+    { id: 'soap', name: '香皂', icon: '🧼', price: 25, type: 'toy', desc: '清洁时额外+15清洁', effect: { clean: 15 } },
+    { id: 'hat', name: '小帽子', icon: '🎩', price: 80, type: 'accessory', desc: '给宠物戴上一顶帽子', accessory: 'hat' },
+    { id: 'bow', name: '蝴蝶结', icon: '🎀', price: 60, type: 'accessory', desc: '可爱的蝴蝶结', accessory: 'bow' },
+    { id: 'crown', name: '皇冠', icon: '👑', price: 200, type: 'accessory', desc: '王者专属皇冠', accessory: 'crown' },
+    { id: 'glasses', name: '墨镜', icon: '🕶️', price: 100, type: 'accessory', desc: '酷酷的墨镜', accessory: 'glasses' },
+];
 
 // ===== Evolution =====
+const EVOLUTION_STAGES = {
+    egg:    { name: '孵化中', minAge: 0,    mood: '🤔 等待孵化...' },
+    baby:   { name: '宝宝期', minAge: 3,    mood: '👶 我是宝宝！' },
+    growing:{ name: '成长期', minAge: 15,   mood: '🌱 正在长大！' },
+    adult:  { name: '成熟期', minAge: 40,   mood: '😎 我长大了！' },
+    master: { name: '完全体', minAge: 120,  mood: '👑 我是王者！' },
+};
+
 function getCurrentStage() {
     const stages = Object.values(EVOLUTION_STAGES).reverse();
     for (const stage of stages) {
@@ -139,10 +57,267 @@ function getCurrentStage() {
     return EVOLUTION_STAGES.egg;
 }
 
-// ===== Mood =====
-function getMood() {
+function getStageEmoji() {
+    const stage = getCurrentStage();
+    if (stage === EVOLUTION_STAGES.egg) return '🥚';
+    if (stage === EVOLUTION_STAGES.baby) return '🐣';
+    if (stage === EVOLUTION_STAGES.growing) return '🐥';
+    if (stage === EVOLUTION_STAGES.adult) return '🦆';
+    return '🦚';
+}
+
+// ===== Achievements =====
+const ACHIEVEMENTS = [
+    { id: 'first_feed', icon: '🍞', name: '初次喂食', cond: s => s.totalActions >= 1 },
+    { id: 'first_play', icon: '⚽', name: '初次玩耍', cond: s => s.totalActions >= 2 },
+    { id: 'ten_actions', icon: '🔟', name: '10次互动', cond: s => s.totalActions >= 10 },
+    { id: 'fifty_actions', icon: '💯', name: '50次互动', cond: s => s.totalActions >= 50 },
+    { id: 'baby_grown', icon: '🐣', name: '孵化成功', cond: s => s.age >= 3 },
+    { id: 'adult_reach', icon: '🦆', name: '长大成人', cond: s => s.age >= 40 },
+    { id: 'master_reach', icon: '🦚', name: '完全体', cond: s => s.age >= 120 },
+    { id: 'perfect_stats', icon: '🌟', name: '满分状态', cond: s => s.hunger >= 90 && s.happy >= 90 && s.energy >= 90 && s.clean >= 90 },
+    { id: 'rich', icon: '💰', name: '小富翁', cond: s => s.coins >= 500 },
+    { id: 'game_master', icon: '🎮', name: '游戏高手', cond: s => s.totalActions >= 20 },
+    { id: 'fashionista', icon: '👗', name: '时尚达人', cond: s => s.inventory.filter(i => SHOP_ITEMS.find(si => si.id === i)?.type === 'accessory').length >= 2 },
+    { id: 'collector', icon: '🎒', name: '收藏家', cond: s => s.inventory.length >= 5 },
+];
+
+// ===== Speeches =====
+const speeches = {
+    feed: ['好吃好吃！', '再来一点！', '嘎嘎，美味！', '咩～谢谢！', '吃饱了！🍞'],
+    play: ['好开心！', '再来再来！', '嘎嘎嘎～', '咩咩咩！', '太好玩了！'],
+    clean: ['好干净！✨', '闪闪发光！', '舒服多了！', '谢谢你！🛁'],
+    sleep: ['晚安...💤', '呼噜...呼噜...', 'Zzz...', '做个好梦！'],
+    idle: ['好无聊哦...', '陪我玩嘛～', '嘎？', '咩～', '你在干嘛？', '今天天气真好！'],
+    hungry: ['好饿...', '有没有吃的？', '肚子咕咕叫...'],
+    dirty: ['好脏啊...', '想洗澡...', '帮我洗洗吧～'],
+    tired: ['好累...', '想睡觉...', '没力气了...'],
+    evolve: ['我进化了！🎉', '变强了！', '新的我！'],
+};
+
+// ===== Audio =====
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playTone(f, t, d, v) {
+    if (!audioCtx) return;
+    v = v || 0.08;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+    g.gain.setValueAtTime(v, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + d);
+}
+function sfx(action) {
+    if (action === 'feed') { playTone(523, 'sine', 0.12); setTimeout(() => playTone(659, 'sine', 0.12), 80); }
+    if (action === 'play') { playTone(440, 'square', 0.08); setTimeout(() => playTone(554, 'square', 0.08), 60); setTimeout(() => playTone(659, 'square', 0.08), 120); }
+    if (action === 'clean') { playTone(880, 'sine', 0.25, 0.04); }
+    if (action === 'sleep') { playTone(220, 'triangle', 0.4, 0.06); }
+    if (action === 'evolve') { playTone(523, 'sine', 0.15); setTimeout(() => playTone(659, 'sine', 0.15), 120); setTimeout(() => playTone(784, 'sine', 0.25), 240); }
+    if (action === 'buy') { playTone(660, 'sine', 0.1); setTimeout(() => playTone(880, 'sine', 0.15), 80); }
+    if (action === 'coin') { playTone(1200, 'sine', 0.08, 0.04); }
+}
+
+// ===== Persistence =====
+function saveState() {
+    state.lastTick = Date.now();
+    localStorage.setItem('ducksheep_v2_state', JSON.stringify(state));
+}
+
+function loadState() {
+    const saved = localStorage.getItem('ducksheep_v2_state');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            state = { ...defaultState, ...parsed };
+            const elapsed = (Date.now() - state.lastTick) / 1000 / 60;
+            if (elapsed > 0 && !state.isSleeping) {
+                state.hunger = Math.max(0, state.hunger - elapsed * 0.8);
+                state.happy = Math.max(0, state.happy - elapsed * 0.5);
+                state.energy = Math.max(0, state.energy - elapsed * 0.3);
+                state.clean = Math.max(0, state.clean - elapsed * 0.4);
+                state.age += elapsed;
+            }
+            if (state.isSleeping) {
+                const se = (Date.now() - state.sleepStart) / 1000 / 60;
+                state.energy = Math.min(100, state.energy + se * 3);
+                state.age += se;
+                state.sleepStart = Date.now();
+            }
+        } catch (e) { state = { ...defaultState }; }
+    }
+}
+
+// ===== Speech =====
+function speak(category) {
+    const msgs = speeches[category] || speeches.idle;
+    const msg = msgs[Math.floor(Math.random() * msgs.length)];
+    const el = document.getElementById('pet-speech');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    if (speechTimeout) clearTimeout(speechTimeout);
+    speechTimeout = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ===== Particles =====
+function spawnParticles(emoji, count) {
+    count = count || 8;
+    const container = document.getElementById('particles');
+    const pet = document.getElementById('pet-canvas');
+    if (!container || !pet) return;
+    const rect = pet.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const items = ['✨', '💫', '🌟', '💖', emoji, '🎉', '💕', '⭐'];
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('span');
+        p.className = 'particle';
+        p.textContent = items[Math.floor(Math.random() * items.length)];
+        p.style.left = (cx + (Math.random() - 0.5) * 120) + 'px';
+        p.style.top = (cy + (Math.random() - 0.5) * 60) + 'px';
+        p.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+        p.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+        container.appendChild(p);
+        setTimeout(() => p.remove(), 2000);
+    }
+}
+
+// ===== Achievements =====
+function checkAchievements() {
+    let changed = false;
+    for (const ach of ACHIEVEMENTS) {
+        if (!state.achievements.includes(ach.id) && ach.cond(state)) {
+            state.achievements.push(ach.id);
+            changed = true;
+            showToast(ach.icon + ' 成就解锁: ' + ach.name);
+            sfx('evolve');
+        }
+    }
+    if (changed) saveState();
+    renderAchievements();
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ffd700,#ffb300);padding:10px 20px;border-radius:25px;font-weight:700;color:#5d4037;z-index:1000;box-shadow:0 8px 30px rgba(255,179,0,0.4);animation:toastIn 0.5s ease,toastOut 0.5s ease 2.5s forwards;';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+}
+
+// ===== View Switching =====
+function switchView(view) {
+    state.currentView = view;
+    document.getElementById('view-home').style.display = view === 'home' ? 'block' : 'none';
+    document.getElementById('view-game').style.display = view === 'game' ? 'block' : 'none';
+    document.getElementById('view-shop').style.display = view === 'shop' ? 'block' : 'none';
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const navBtn = document.querySelector('.nav-btn[data-view="' + view + '"]');
+    if (navBtn) navBtn.classList.add('active');
+    if (view === 'game') MiniGame.start();
+    if (view === 'shop') renderShop();
+    if (view === 'home') renderAll();
+}
+
+// ===== Shop =====
+function renderShop() {
+    const grid = document.getElementById('shop-grid');
+    const coinDisplay = document.getElementById('shop-coins');
+    if (!grid) return;
+    if (coinDisplay) coinDisplay.textContent = state.coins;
+    grid.innerHTML = SHOP_ITEMS.map(function(item) {
+        const owned = state.inventory.includes(item.id);
+        const equipped = state.equippedAccessory === item.accessory;
+        var btnHtml = '';
+        if (owned) {
+            if (item.type === 'accessory') {
+                btnHtml = '<button class="shop-btn' + (equipped ? ' equipped' : '') + '" onclick="equipAccessory(\'' + item.id + '\')">' + (equipped ? '✅ 已装备' : '👗 装备') + '</button>';
+            } else {
+                btnHtml = '<button class="shop-btn owned-btn" disabled>✅ 已拥有</button>';
+            }
+        } else {
+            btnHtml = '<button class="shop-btn" onclick="buyItem(\'' + item.id + '\')"' + (state.coins < item.price ? ' disabled' : '') + '>🛒 购买</button>';
+        }
+        return '<div class="shop-item' + (owned ? ' owned' : '') + '">' +
+            '<div class="shop-item-icon">' + item.icon + '</div>' +
+            '<div class="shop-item-name">' + item.name + '</div>' +
+            '<div class="shop-item-desc">' + item.desc + '</div>' +
+            '<div class="shop-item-price">💰 ' + item.price + '</div>' +
+            btnHtml +
+            '</div>';
+    }).join('');
+}
+
+function buyItem(id) {
+    const item = SHOP_ITEMS.find(i => i.id === id);
+    if (!item || state.coins < item.price) return;
+    if (state.inventory.includes(id)) return;
+    state.coins -= item.price;
+    state.inventory.push(id);
+    sfx('buy');
+    saveState();
+    renderShop();
+    renderAll();
+    showToast('✅ 购买了 ' + item.name + '！');
+}
+
+function equipAccessory(id) {
+    const item = SHOP_ITEMS.find(i => i.id === id);
+    if (!item || !item.accessory) return;
+    if (state.equippedAccessory === item.accessory) {
+        state.equippedAccessory = null;
+    } else {
+        state.equippedAccessory = item.accessory;
+    }
+    PetRenderer.accessory = state.equippedAccessory;
+    saveState();
+    renderShop();
+}
+
+// ===== Render =====
+function renderStats() {
+    const hungerEl = document.getElementById('stat-hunger');
+    const happyEl = document.getElementById('stat-happy');
+    const energyEl = document.getElementById('stat-energy');
+    const cleanEl = document.getElementById('stat-clean');
+    const vHunger = document.getElementById('val-hunger');
+    const vHappy = document.getElementById('val-happy');
+    const vEnergy = document.getElementById('val-energy');
+    const vClean = document.getElementById('val-clean');
+    if (hungerEl) hungerEl.style.width = state.hunger + '%';
+    if (happyEl) happyEl.style.width = state.happy + '%';
+    if (energyEl) energyEl.style.width = state.energy + '%';
+    if (cleanEl) cleanEl.style.width = state.clean + '%';
+    if (vHunger) vHunger.textContent = Math.round(state.hunger) + '%';
+    if (vHappy) vHappy.textContent = Math.round(state.happy) + '%';
+    if (vEnergy) vEnergy.textContent = Math.round(state.energy) + '%';
+    if (vClean) vClean.textContent = Math.round(state.clean) + '%';
+}
+
+function renderAll() {
+    const stage = getCurrentStage();
+    const elName = document.getElementById('pet-name');
+    const elMood = document.getElementById('pet-mood');
+    const elStage = document.getElementById('stage-badge');
+    const elAge = document.getElementById('age-badge');
+    const elActions = document.getElementById('total-badge');
+    const elCoins = document.getElementById('coin-display');
+    if (elName) elName.textContent = state.petName;
+    if (elMood) elMood.textContent = state.isSleeping ? '😴 睡觉中...' : getMoodText();
+    if (elStage) elStage.textContent = getStageEmoji() + ' ' + stage.name;
+    if (elAge) elAge.textContent = '年龄: ' + Math.floor(state.age) + '分';
+    if (elActions) elActions.textContent = '互动: ' + state.totalActions + '次';
+    if (elCoins) elCoins.textContent = state.coins;
+    renderStats();
+    renderAchievements();
+}
+
+function getMoodText() {
     const avg = (state.hunger + state.happy + state.energy + state.clean) / 4;
-    if (state.isSleeping) return '😴 睡觉中...';
     if (avg >= 90) return '😆 超开心！';
     if (avg >= 70) return '😊 很开心';
     if (avg >= 50) return '😐 一般般';
@@ -151,307 +326,192 @@ function getMood() {
     return '💀 快不行了...';
 }
 
-// ===== Speech =====
-const speeches = {
-    feed: ['好吃好吃！🍞', '再来一点！', '嘎嘎，美味！', '咩～谢谢！', '吃饱了！'],
-    play: ['好开心！', '再来再来！', '嘎嘎嘎～', '咩咩咩！', '太好玩了！'],
-    clean: ['好干净！✨', '闪闪发光！', '舒服多了！', '谢谢你！'],
-    sleep: ['晚安...💤', '呼噜...呼噜...', 'Zzz...', '做个好梦！'],
-    idle: ['好无聊哦...', '陪我玩嘛～', '嘎？', '咩～', '你在干嘛？'],
-    hungry: ['好饿...', '有没有吃的？', '肚子咕咕叫...'],
-    dirty: ['好脏啊...', '想洗澡...', '帮我洗洗吧～'],
-    tired: ['好累...', '想睡觉...', '没力气了...'],
-    evolve: ['我进化了！', '变强了！', '新的我！'],
-};
-
-function speak(category) {
-    const msgs = speeches[category] || speeches.idle;
-    const msg = msgs[Math.floor(Math.random() * msgs.length)];
-    petSpeech.textContent = msg;
-    petSpeech.classList.add('show');
-    if (speechTimeout) clearTimeout(speechTimeout);
-    speechTimeout = setTimeout(() => {
-        petSpeech.classList.remove('show');
-    }, 2500);
-}
-
-// ===== Particles =====
-function spawnParticles(emoji, count = 8) {
-    const rect = petCharacter.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const particles = ['✨', '💫', '🌟', '💖', emoji, '🎉', '💕', '⭐'];
-
-    for (let i = 0; i < count; i++) {
-        const p = document.createElement('span');
-        p.className = 'particle';
-        p.textContent = particles[Math.floor(Math.random() * particles.length)];
-        p.style.left = (cx + (Math.random() - 0.5) * 120) + 'px';
-        p.style.top = (cy + (Math.random() - 0.5) * 60) + 'px';
-        p.style.animationDuration = (1 + Math.random() * 1.5) + 's';
-        p.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
-        particlesContainer.appendChild(p);
-        setTimeout(() => p.remove(), 2000);
-    }
-}
-
-// ===== Achievements =====
-function checkAchievements() {
-    let newUnlock = false;
-    for (const ach of ACHIEVEMENTS) {
-        if (!state.achievements.includes(ach.id) && ach.condition(state)) {
-            state.achievements.push(ach.id);
-            newUnlock = true;
-            showAchievementToast(ach);
-        }
-    }
-    if (newUnlock) saveState();
-    renderAchievements();
-}
-
-function showAchievementToast(ach) {
-    sfxAchievement();
-    const toast = document.createElement('div');
-    toast.style.cssText = 
-        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-        background: linear-gradient(135deg, #ffd700, #ffb300);
-        padding: 12px 24px; border-radius: 30px;
-        font-weight: 700; color: #5d4037; font-size: 1rem;
-        z-index: 1000; box-shadow: 0 8px 30px rgba(255, 179, 0, 0.4);
-        animation: toastIn 0.5s ease, toastOut 0.5s ease 2.5s forwards;
-    ;
-    toast.textContent = ${ach.icon} 成就解锁: ;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3200);
-}
-
 function renderAchievements() {
-    achievementList.innerHTML = ACHIEVEMENTS.map(ach => {
+    const list = document.getElementById('achievement-list');
+    if (!list) return;
+    list.innerHTML = ACHIEVEMENTS.map(function(ach) {
         const unlocked = state.achievements.includes(ach.id);
-        return <span class="achievement-badge" title="">
-             
-        </span>;
+        return '<span class="achievement-badge' + (unlocked ? ' unlocked' : '') + '" title="' + ach.name + '">' + (unlocked ? ach.icon : '🔒') + ' ' + ach.name + '</span>';
     }).join('');
 }
 
-// ===== Render =====
-function renderStats() {
-    statHunger.style.width = state.hunger + '%';
-    statHappy.style.width = state.happy + '%';
-    statEnergy.style.width = state.energy + '%';
-    statClean.style.width = state.clean + '%';
-    valHunger.textContent = Math.round(state.hunger) + '%';
-    valHappy.textContent = Math.round(state.happy) + '%';
-    valEnergy.textContent = Math.round(state.energy) + '%';
-    valClean.textContent = Math.round(state.clean) + '%';
-
-    // Color warnings
-    statHunger.style.background = state.hunger < 30 ? '#f44336' : 'var(--bar-hunger)';
-    statHappy.style.background = state.happy < 30 ? '#9c27b0' : 'var(--bar-happy)';
-    statEnergy.style.background = state.energy < 30 ? '#607d8b' : 'var(--bar-energy)';
-    statClean.style.background = state.clean < 30 ? '#795548' : 'var(--bar-clean)';
-}
-
-function renderPet() {
-    const stage = getCurrentStage();
-    petEmoji.textContent = stage.emoji;
-    stageBadge.textContent = ${stage.emoji} ;
-    petMood.textContent = getMood();
-    ageBadge.textContent = 年龄:  分钟;
-    totalBadge.textContent = 互动:  次;
-
-    if (state.isSleeping) {
-        petCharacter.classList.add('sleeping');
-        petAura.style.background = 'radial-gradient(circle, rgba(100, 100, 200, 0.4), transparent 70%)';
-        document.body.classList.add('night-mode');
-    } else {
-        petCharacter.classList.remove('sleeping');
-        petAura.style.background = 'radial-gradient(circle, rgba(255, 200, 100, 0.3), transparent 70%)';
-        document.body.classList.remove('night-mode');
-    }
-}
-
-function renderAll() {
-    renderStats();
-    renderPet();
-    renderAchievements();
-}
-
 // ===== Actions =====
-function canAct(action) {
-    if (state.isSleeping && action !== 'sleep') {
-        speak('sleep');
-        return false;
-    }
-    if (actionCooldowns[action] && Date.now() < actionCooldowns[action]) {
-        return false;
-    }
-    return true;
-}
-
 function doAction(action) {
-    if (!canAct(action)) return;
+    if (state.isSleeping && action !== 'sleep') { speak('sleep'); return; }
     initAudio();
-
     switch (action) {
         case 'feed':
             state.hunger = Math.min(100, state.hunger + 25);
             state.clean = Math.max(0, state.clean - 5);
-            petCharacter.classList.add('eating');
-            setTimeout(() => petCharacter.classList.remove('eating'), 800);
-            sfxFeed();
+            petAnimState = 'eating';
+            animStateTimer = 800;
+            sfx('feed');
             speak('feed');
             spawnParticles('🍞', 6);
             break;
-
         case 'play':
             state.happy = Math.min(100, state.happy + 25);
             state.energy = Math.max(0, state.energy - 15);
             state.clean = Math.max(0, state.clean - 8);
-            petCharacter.classList.add('bounce');
-            setTimeout(() => petCharacter.classList.remove('bounce'), 600);
-            sfxPlay();
+            petAnimState = 'happy';
+            animStateTimer = 800;
+            sfx('play');
             speak('play');
             spawnParticles('⚽', 10);
             break;
-
         case 'clean':
             state.clean = Math.min(100, state.clean + 30);
             state.happy = Math.min(100, state.happy + 5);
-            petCharacter.classList.add('clean');
-            setTimeout(() => petCharacter.classList.remove('clean'), 600);
-            sfxClean();
+            sfx('clean');
             speak('clean');
             spawnParticles('✨', 12);
             break;
-
         case 'sleep':
             if (state.isSleeping) {
                 state.isSleeping = false;
                 state.sleepStart = null;
-                petCharacter.classList.remove('sleeping');
-                document.body.classList.remove('night-mode');
-                speak('idle');
+                petAnimState = 'idle';
             } else {
                 state.isSleeping = true;
                 state.sleepStart = Date.now();
-                petCharacter.classList.add('sleeping');
-                document.body.classList.add('night-mode');
-                sfxSleep();
+                petAnimState = 'sleeping';
+                sfx('sleep');
                 speak('sleep');
                 spawnParticles('💤', 6);
             }
             break;
     }
-
     state.totalActions++;
-    actionCooldowns[action] = Date.now() + 1500;
-
     const prevStage = getCurrentStage();
     checkAchievements();
     const newStage = getCurrentStage();
     if (prevStage.name !== newStage.name && newStage.minAge > 0) {
-        sfxEvolve();
+        sfx('evolve');
         speak('evolve');
         spawnParticles('🎉', 20);
+        showToast('🎉 ' + state.petName + ' 进化到了 ' + newStage.name + '！');
     }
-
     saveState();
     renderAll();
-
-    // Remove cooldown visual
-    setTimeout(() => {
-        delete actionCooldowns[action];
-        document.querySelectorAll('.action-btn').forEach(b => b.classList.remove('cooldown'));
-    }, 1500);
 }
 
-// ===== Tick (stat decay) =====
+// ===== Pet Naming =====
+function showNameEditor() {
+    const name = prompt('给你的宠物取个名字吧：', state.petName);
+    if (name && name.trim()) {
+        state.petName = name.trim().slice(0, 12);
+        saveState();
+        renderAll();
+    }
+}
+
+// ===== Tick =====
 function tick() {
     if (state.isSleeping) {
-        const sleepMinutes = (Date.now() - state.sleepStart) / 1000 / 60;
-        state.energy = Math.min(100, state.energy + sleepMinutes * 3);
-        state.age += sleepMinutes;
+        const sm = (Date.now() - state.sleepStart) / 1000 / 60;
+        state.energy = Math.min(100, state.energy + sm * 3);
+        state.age += sm;
         state.sleepStart = Date.now();
-        state.hunger = Math.max(0, state.hunger - sleepMinutes * 0.3);
-        state.happy = Math.max(0, state.happy - sleepMinutes * 0.2);
-        state.clean = Math.max(0, state.clean - sleepMinutes * 0.2);
+        state.hunger = Math.max(0, state.hunger - sm * 0.3);
+        state.happy = Math.max(0, state.happy - sm * 0.2);
+        state.clean = Math.max(0, state.clean - sm * 0.2);
     } else {
-        const elapsed = 1 / 60; // 1 second tick
-        state.hunger = Math.max(0, state.hunger - elapsed * 0.8);
-        state.happy = Math.max(0, state.happy - elapsed * 0.5);
-        state.energy = Math.max(0, state.energy - elapsed * 0.3);
-        state.clean = Math.max(0, state.clean - elapsed * 0.4);
-        state.age += elapsed;
+        const e = 1 / 60;
+        state.hunger = Math.max(0, state.hunger - e * 0.8);
+        state.happy = Math.max(0, state.happy - e * 0.5);
+        state.energy = Math.max(0, state.energy - e * 0.3);
+        state.clean = Math.max(0, state.clean - e * 0.4);
+        state.age += e;
     }
-
-    // Auto-speak when stats are low
     if (state.hunger < 30 && Math.random() < 0.02) speak('hungry');
     if (state.clean < 30 && Math.random() < 0.02) speak('dirty');
     if (state.energy < 30 && Math.random() < 0.02) speak('tired');
-
     checkAchievements();
     saveState();
     renderAll();
 }
 
-// ===== Click Pet =====
-petCharacter.addEventListener('click', () => {
-    if (state.isSleeping) return;
-    initAudio();
-    petCharacter.classList.add('wiggle');
-    setTimeout(() => petCharacter.classList.remove('wiggle'), 500);
-    state.happy = Math.min(100, state.happy + 3);
-    state.totalActions++;
-    speak('idle');
-    saveState();
-    renderAll();
-    playTone(800 + Math.random() * 400, 'sine', 0.1, 0.05);
-});
-
-// ===== Action Buttons =====
-document.querySelectorAll('.action-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const action = btn.dataset.action;
-        if (actionCooldowns[action]) {
-            btn.classList.add('cooldown');
-            setTimeout(() => btn.classList.remove('cooldown'), 1500);
-            return;
-        }
-        doAction(action);
-    });
-});
-
-// ===== Add toast animation =====
-const toastStyle = document.createElement('style');
-toastStyle.textContent = 
-    @keyframes toastIn {
-        from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
-        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+// ===== Animation Loop =====
+function animLoop() {
+    if (animStateTimer > 0) {
+        animStateTimer -= 16.67;
+        if (animStateTimer <= 0) petAnimState = state.isSleeping ? 'sleeping' : 'idle';
     }
-    @keyframes toastOut {
-        from { opacity: 1; transform: translateX(-50%) translateY(0); }
-        to { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+    const animState = state.isSleeping ? 'sleeping' : petAnimState;
+    PetRenderer.update(16.67, state);
+    PetRenderer.draw(animState);
+    requestAnimationFrame(animLoop);
+}
+
+function gameLoop() {
+    if (state.currentView === 'game') {
+        MiniGame.update();
+        MiniGame.draw();
     }
-;
-document.head.appendChild(toastStyle);
+    requestAnimationFrame(gameLoop);
+}
 
 // ===== Init =====
-loadState();
-renderAll();
-tickInterval = setInterval(tick, 1000);
+function init() {
+    loadState();
+    PetRenderer.init(document.getElementById('pet-canvas'));
+    PetRenderer.accessory = state.equippedAccessory;
+    MiniGame.init(document.getElementById('game-canvas'));
 
-// Auto-idle speech
-setInterval(() => {
-    if (!state.isSleeping && Math.random() < 0.1 && !petSpeech.classList.contains('show')) {
-        const avg = (state.hunger + state.happy + state.energy + state.clean) / 4;
-        if (state.hunger < 30) speak('hungry');
-        else if (state.clean < 30) speak('dirty');
-        else if (state.energy < 30) speak('tired');
-        else if (Math.random() < 0.3) speak('idle');
-    }
-}, 15000);
+    document.querySelectorAll('.nav-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { switchView(btn.dataset.view); });
+    });
 
-console.log('🦆🐑 DuckSheep 已就绪！');
-console.log('你的虚拟宠物伙伴正在等待你的照顾~');
-console.log('试试点击宠物或者使用按钮互动吧！');
+    document.querySelectorAll('.action-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { doAction(btn.dataset.action); });
+    });
+
+    document.getElementById('pet-canvas').addEventListener('click', function() {
+        if (state.isSleeping) return;
+        initAudio();
+        state.happy = Math.min(100, state.happy + 3);
+        state.totalActions++;
+        petAnimState = 'happy';
+        animStateTimer = 500;
+        speak('idle');
+        saveState();
+        renderAll();
+        playTone(800 + Math.random() * 400, 'sine', 0.08, 0.04);
+    });
+
+    document.getElementById('pet-name').addEventListener('click', showNameEditor);
+
+    const origStop = MiniGame.stop;
+    MiniGame.stop = function() {
+        const result = origStop.call(this);
+        state.coins += result.coins;
+        state.totalActions++;
+        saveState();
+        renderAll();
+        checkAchievements();
+        showToast('🎮 游戏结束！获得 ' + result.coins + ' 金币！');
+        return result;
+    };
+
+    document.getElementById('btn-back-game').addEventListener('click', function() { switchView('home'); });
+    document.getElementById('btn-back-shop').addEventListener('click', function() { switchView('home'); });
+
+    renderAll();
+    tickInterval = setInterval(tick, 1000);
+    requestAnimationFrame(animLoop);
+    requestAnimationFrame(gameLoop);
+
+    setInterval(function() {
+        if (!state.isSleeping && state.currentView === 'home' && Math.random() < 0.08) {
+            const avg = (state.hunger + state.happy + state.energy + state.clean) / 4;
+            if (state.hunger < 30) speak('hungry');
+            else if (state.clean < 30) speak('dirty');
+            else if (state.energy < 30) speak('tired');
+            else if (Math.random() < 0.3) speak('idle');
+        }
+    }, 20000);
+
+    console.log('🦆🐑 DuckSheep v2.0 已就绪！');
+}
+
+document.addEventListener('DOMContentLoaded', init);
